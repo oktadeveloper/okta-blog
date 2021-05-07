@@ -1,0 +1,26 @@
+name: CLI Setup
+
+on: [pull_request]
+
+env:
+  DEPLOY_HOST: "okta-blog.netlify.app"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Waiting for Netlify Deploy
+        uses: fountainhead/action-wait-for-check@v1.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          checkName: "Pages changed - okta-blog"
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Storing Preview URL in Environment
+        run: echo "DEPLOY_HOST=deploy-preview-${{ github.event.pull_request.number }}--${{ env.DEPLOY_HOST }}" >> $GITHUB_ENV
+      - uses: colbyfayock/applitools-eyes-action@main
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLITOOLS_API_KEY: ${{ secrets.APPLITOOLS_API_KEY }}
+          APPLITOOLS_BATCH_ID: ${{ github.sha }}
+          appName: Okta Blog
+          baseUrl: "https://${{ env.DEPLOY_HOST }}"
